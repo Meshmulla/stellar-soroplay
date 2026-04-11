@@ -1,0 +1,174 @@
+/**
+ * Example Soroban contracts for learning
+ */
+
+export interface ContractExample {
+  id: string
+  title: string
+  description: string
+  code: string
+  difficulty: 'beginner' | 'intermediate' | 'advanced'
+}
+
+export const CONTRACT_EXAMPLES: ContractExample[] = [
+  {
+    id: 'hello-world',
+    title: 'Hello World',
+    description: 'The simplest contract - returns a greeting message',
+    difficulty: 'beginner',
+    code: `#[soroban_contract]
+pub mod hello_contract {
+    use soroban_sdk::{contract, contractimpl, log, Env, String};
+
+    #[contract]
+    pub struct HelloContract;
+
+    #[contractimpl]
+    impl HelloContract {
+        /// Returns "Hello, World!"
+        pub fn hello(env: Env) -> String {
+            log!(&env, "Hello, World!");
+            String::from_slice(&env, "Hello, World!")
+        }
+
+        /// Returns greeting for a name
+        pub fn greet(env: Env, name: String) -> String {
+            log!(&env, "Greeting {}", &name);
+            let greeting = String::from_slice(&env, "Hello, ");
+            greeting.concat(&name)
+        }
+    }
+}`,
+  },
+  {
+    id: 'counter',
+    title: 'Counter Contract',
+    description: 'A contract that maintains a counter state and allows incrementing',
+    difficulty: 'beginner',
+    code: `#[soroban_contract]
+pub mod counter_contract {
+    use soroban_sdk::{contract, contractimpl, Env, Symbol};
+
+    #[contract]
+    pub struct Counter;
+
+    #[contractimpl]
+    impl Counter {
+        /// Increment the counter
+        pub fn increment(env: Env) -> u32 {
+            let key = Symbol::short("count");
+            let count: u32 = env.storage().instance().get(&key).unwrap_or(0);
+            let new_count = count + 1;
+            env.storage().instance().set(&key, &new_count);
+            new_count
+        }
+
+        /// Get the current count
+        pub fn get_count(env: Env) -> u32 {
+            let key = Symbol::short("count");
+            env.storage().instance().get(&key).unwrap_or(0)
+        }
+    }
+}`,
+  },
+  {
+    id: 'token-transfer',
+    title: 'Token Transfer',
+    description: 'Basic token transfer contract demonstrating ledger operations',
+    difficulty: 'intermediate',
+    code: `#[soroban_contract]
+pub mod token_contract {
+    use soroban_sdk::{contract, contractimpl, Address, Env, Symbol};
+
+    #[contract]
+    pub struct TokenContract;
+
+    #[contractimpl]
+    impl TokenContract {
+        /// Transfer tokens between accounts
+        pub fn transfer(
+            env: Env,
+            from: Address,
+            to: Address,
+            amount: u128,
+        ) -> bool {
+            from.require_auth();
+            
+            let key_from = Symbol::short("balance");
+            let key_to = Symbol::short("balance");
+            
+            let from_balance: u128 = env.storage().instance().get(&key_from).unwrap_or(0);
+            if from_balance < amount {
+                return false;
+            }
+            
+            let to_balance: u128 = env.storage().instance().get(&key_to).unwrap_or(0);
+            
+            env.storage().instance().set(&key_from, &(from_balance - amount));
+            env.storage().instance().set(&key_to, &(to_balance + amount));
+            
+            true
+        }
+
+        /// Get balance of an account
+        pub fn balance(env: Env) -> u128 {
+            let key = Symbol::short("balance");
+            env.storage().instance().get(&key).unwrap_or(0)
+        }
+    }
+}`,
+  },
+  {
+    id: 'fibonacci',
+    title: 'Fibonacci Generator',
+    description: 'Calculate Fibonacci numbers with memoization',
+    difficulty: 'intermediate',
+    code: `#[soroban_contract]
+pub mod fibonacci {
+    use soroban_sdk::{contract, contractimpl, Env, Symbol};
+
+    #[contract]
+    pub struct Fibonacci;
+
+    #[contractimpl]
+    impl Fibonacci {
+        /// Calculate fibonacci number at position n
+        pub fn fib(env: Env, n: u32) -> u64 {
+            let key = Symbol::short("fib");
+            
+            if n <= 1 {
+                return n as u64;
+            }
+            
+            let mut a = 0u64;
+            let mut b = 1u64;
+            
+            for _ in 2..=n {
+                let next = a + b;
+                a = b;
+                b = next;
+            }
+            
+            b
+        }
+
+        /// Get fibonacci sequence up to n
+        pub fn sequence(env: Env, count: u32) -> u64 {
+            let mut sum = 0u64;
+            for i in 0..count {
+                sum += Self::fib(env, i);
+            }
+            sum
+        }
+    }
+}`,
+  },
+]
+
+export function getExampleById(id: string): ContractExample | undefined {
+  return CONTRACT_EXAMPLES.find((ex) => ex.id === id)
+}
+
+export function getExamplesByDifficulty(difficulty: string): ContractExample[] {
+  return CONTRACT_EXAMPLES.filter((ex) => ex.difficulty === difficulty)
+}
