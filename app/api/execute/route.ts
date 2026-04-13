@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log(`[v0] Executing function: ${functionName} with params:`, params)
+    console.log(`[soroplay] Executing function: ${functionName} with params:`, params)
 
     // For MVP, return mock results based on function name
     // In production, this would use wasmtime or similar to execute WASM
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       gasEstimate: Math.floor(Math.random() * 5000) + 1000,
     })
   } catch (error) {
-    console.error('[v0] Execution error:', error)
+    console.error('[soroplay] Execution error:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Execution failed' },
       { status: 500 }

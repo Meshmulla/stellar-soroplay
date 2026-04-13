@@ -1,6 +1,9 @@
 {
-  "name": "my-project",
+  "name": "stellar-soroplay",
   "version": "0.1.0",
+  "description": "Interactive browser-based IDE for learning and writing Stellar Soroban smart contracts",
+  "author": "meshmulla <https://github.com/Meshmulla>",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "dev": "next dev",

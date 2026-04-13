@@ -9,7 +9,8 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: 'SoroPlay - Learn Soroban Smart Contracts',
   description: 'Interactive browser-based IDE for learning and writing Stellar Soroban smart contracts in Rust',
-  generator: 'v0.app',
+  generator: 'Next.js',
+  authors: [{ name: 'meshmulla', url: 'https://github.com/Meshmulla' }],
   icons: {
     icon: [
       {

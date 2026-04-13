@@ -17,14 +17,14 @@ export async function POST(request: NextRequest) {
 
     // Detect functions for later execution
     const functions = detectContractFunctions(code)
-    console.log(`[v0] Detected ${functions.length} contract functions:`, functions.map((f) => f.name))
+    console.log(`[soroplay] Detected ${functions.length} contract functions:`, functions.map((f) => f.name))
 
     // For MVP, we'll use a remote compilation service or return mock WASM
     const compilationServiceUrl = process.env.COMPILATION_SERVICE_URL
 
     if (!compilationServiceUrl) {
       // Fallback: return a mock WASM binary for demo purposes
-      console.log('[v0] Compilation service not configured, returning mock WASM for demo')
+      console.log('[soroplay] Compilation service not configured, returning mock WASM for demo')
       const mockWasm = new Uint8Array([
         0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, // WASM magic + version
         0x01, 0x07, 0x01, 0x60, 0x00, 0x01, 0x7f, // Function signature
@@ -66,14 +66,14 @@ export async function POST(request: NextRequest) {
         warnings: validation.warnings,
       })
     } catch (error) {
-      console.error('[v0] Compilation service error:', error)
+      console.error('[soroplay] Compilation service error:', error)
       return NextResponse.json(
         { error: 'Failed to reach compilation service' },
         { status: 503 }
       )
     }
   } catch (error) {
-    console.error('[v0] Compilation error:', error)
+    console.error('[soroplay] Compilation error:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
