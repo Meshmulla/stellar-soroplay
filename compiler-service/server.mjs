@@ -24,7 +24,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const TEMPLATE_DIR = path.join(__dirname, 'template')
 const LIB_PATH = path.join(TEMPLATE_DIR, 'src', 'lib.rs')
 const WASM_NAME = 'soroplay_contract.wasm'
-const RAW_WASM = path.join(TEMPLATE_DIR, 'target', 'wasm32-unknown-unknown', 'release', WASM_NAME)
+const RAW_WASM = path.join(TEMPLATE_DIR, 'target', 'wasm32v1-none', 'release', WASM_NAME)
 const OPT_WASM = RAW_WASM.replace(/\.wasm$/, '.optimized.wasm')
 
 const MAX_CODE_BYTES = 64 * 1024
@@ -74,7 +74,7 @@ async function compile(code) {
 
   const build = await run(
     'cargo',
-    ['build', '--target', 'wasm32-unknown-unknown', '--release'],
+    ['build', '--target', 'wasm32v1-none', '--release'],
     { cwd: TEMPLATE_DIR, env: { ...process.env, CARGO_NET_OFFLINE: 'true' } }
   )
 
