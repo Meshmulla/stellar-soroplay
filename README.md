@@ -113,9 +113,9 @@ pnpm lint
 
 ## Configuration
 
-SoroPlay works out of the box with a mock WASM binary for demo purposes. To enable real Rust-to-WASM compilation, point it at a Soroban compilation service.
+SoroPlay works out of the box with a mock WASM binary for demo purposes. To enable real Rust-to-WASM compilation, run the bundled compilation service in [`compiler-service/`](compiler-service/) (a Dockerized Rust + `stellar`/`cargo` build service — see its README for Railway/Render deploy steps) and point the app at it.
 
-Create a `.env.local` file in the project root:
+Create a `.env.local` file in the project root (see [`.env.example`](.env.example)):
 
 ```env
 # URL of your Soroban compilation service
