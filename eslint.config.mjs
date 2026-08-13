@@ -3,8 +3,8 @@ import typescript from 'eslint-config-next/typescript'
 
 const eslintConfig = [
   {
-    // components/ui is vendored shadcn/ui boilerplate — lint our own code only.
-    ignores: ['node_modules/**', '.next/**', 'next-env.d.ts', 'components/ui/**'],
+    // components/ui and hooks are vendored shadcn/ui boilerplate — lint our own code only.
+    ignores: ['node_modules/**', '.next/**', 'next-env.d.ts', 'components/ui/**', 'hooks/**'],
   },
   ...next,
   ...typescript,
