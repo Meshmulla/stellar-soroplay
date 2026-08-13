@@ -67,6 +67,16 @@ export default function EditorPane() {
     }
   }, [setCode])
 
+  // Push external code changes (e.g. loading an example) into the editor.
+  // Guarded so we only setValue when it actually differs, avoiding a loop
+  // with the editor's own change handler.
+  useEffect(() => {
+    const editor = aceEditorRef.current
+    if (editor && editor.getValue() !== code) {
+      editor.setValue(code, -1)
+    }
+  }, [code])
+
   return (
     <div className="flex flex-1 flex-col border-r border-border">
       <div className="border-b border-border px-4 py-3">
