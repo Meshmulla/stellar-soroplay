@@ -5,8 +5,12 @@ export async function POST(request: NextRequest) {
   try {
     const { code } = await request.json()
 
-    if (!code) {
+    if (!code || typeof code !== 'string') {
       return NextResponse.json({ error: 'No code provided' }, { status: 400 })
+    }
+
+    if (code.length > 64 * 1024) {
+      return NextResponse.json({ error: 'Contract source is too large' }, { status: 413 })
     }
 
     // Validate contract structure
@@ -42,11 +46,16 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    // Guard against a slow or hung compilation service.
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 120_000)
+
     try {
       const response = await fetch(compilationServiceUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code }),
+        signal: controller.signal,
       })
 
       const data = await response.json()
@@ -66,11 +75,20 @@ export async function POST(request: NextRequest) {
         warnings: validation.warnings,
       })
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error('[soroplay] Compilation service timed out')
+        return NextResponse.json(
+          { error: 'Compilation service timed out' },
+          { status: 504 }
+        )
+      }
       console.error('[soroplay] Compilation service error:', error)
       return NextResponse.json(
         { error: 'Failed to reach compilation service' },
         { status: 503 }
       )
+    } finally {
+      clearTimeout(timeout)
     }
   } catch (error) {
     console.error('[soroplay] Compilation error:', error)
