@@ -35,29 +35,29 @@ impl HelloContract {
     title: 'Counter Contract',
     description: 'A contract that maintains a counter state and allows incrementing',
     difficulty: 'beginner',
-    code: `#[soroban_contract]
-pub mod counter_contract {
-    use soroban_sdk::{contract, contractimpl, Env, Symbol};
+    code: `#![no_std]
+use soroban_sdk::{contract, contractimpl, symbol_short, Env, Symbol};
 
-    #[contract]
-    pub struct Counter;
+const COUNTER: Symbol = symbol_short!("COUNTER");
 
-    #[contractimpl]
-    impl Counter {
-        /// Increment the counter
-        pub fn increment(env: Env) -> u32 {
-            let key = Symbol::short("count");
-            let count: u32 = env.storage().instance().get(&key).unwrap_or(0);
-            let new_count = count + 1;
-            env.storage().instance().set(&key, &new_count);
-            new_count
-        }
+#[contract]
+pub struct IncrementContract;
 
-        /// Get the current count
-        pub fn get_count(env: Env) -> u32 {
-            let key = Symbol::short("count");
-            env.storage().instance().get(&key).unwrap_or(0)
-        }
+#[contractimpl]
+impl IncrementContract {
+    /// Increment the persistent counter and return the new value.
+    pub fn increment(env: Env) -> u32 {
+        let mut count: u32 = env.storage().instance().get(&COUNTER).unwrap_or(0);
+        count += 1;
+        env.storage().instance().set(&COUNTER, &count);
+        // Keep the contract's instance storage alive.
+        env.storage().instance().extend_ttl(50, 100);
+        count
+    }
+
+    /// Return the current counter value.
+    pub fn get_count(env: Env) -> u32 {
+        env.storage().instance().get(&COUNTER).unwrap_or(0)
     }
 }`,
   },
