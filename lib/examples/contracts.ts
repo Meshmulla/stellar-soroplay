@@ -66,45 +66,33 @@ impl IncrementContract {
     title: 'Token Transfer',
     description: 'Basic token transfer contract demonstrating ledger operations',
     difficulty: 'intermediate',
-    code: `#[soroban_contract]
-pub mod token_contract {
-    use soroban_sdk::{contract, contractimpl, Address, Env, Symbol};
+    code: `#![no_std]
+use soroban_sdk::{contract, contractimpl, Address, Env};
 
-    #[contract]
-    pub struct TokenContract;
+#[contract]
+pub struct TokenContract;
 
-    #[contractimpl]
-    impl TokenContract {
-        /// Transfer tokens between accounts
-        pub fn transfer(
-            env: Env,
-            from: Address,
-            to: Address,
-            amount: u128,
-        ) -> bool {
-            from.require_auth();
-            
-            let key_from = Symbol::short("balance");
-            let key_to = Symbol::short("balance");
-            
-            let from_balance: u128 = env.storage().instance().get(&key_from).unwrap_or(0);
-            if from_balance < amount {
-                return false;
-            }
-            
-            let to_balance: u128 = env.storage().instance().get(&key_to).unwrap_or(0);
-            
-            env.storage().instance().set(&key_from, &(from_balance - amount));
-            env.storage().instance().set(&key_to, &(to_balance + amount));
-            
-            true
+#[contractimpl]
+impl TokenContract {
+    /// Transfer \`amount\` from \`from\` to \`to\`. Requires \`from\`'s auth.
+    /// Balances are keyed per-Address in persistent storage.
+    pub fn transfer(env: Env, from: Address, to: Address, amount: i128) -> bool {
+        from.require_auth();
+
+        let from_balance = Self::balance(env.clone(), from.clone());
+        if from_balance < amount {
+            return false;
         }
+        let to_balance = Self::balance(env.clone(), to.clone());
 
-        /// Get balance of an account
-        pub fn balance(env: Env) -> u128 {
-            let key = Symbol::short("balance");
-            env.storage().instance().get(&key).unwrap_or(0)
-        }
+        env.storage().persistent().set(&from, &(from_balance - amount));
+        env.storage().persistent().set(&to, &(to_balance + amount));
+        true
+    }
+
+    /// Read the stored balance for \`who\` (0 if never set).
+    pub fn balance(env: Env, who: Address) -> i128 {
+        env.storage().persistent().get(&who).unwrap_or(0)
     }
 }`,
   },
