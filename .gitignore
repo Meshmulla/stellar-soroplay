@@ -10,3 +10,6 @@ node_modules
 .DS_Store
 # TypeScript build cache
 *.tsbuildinfo
+
+# Next.js generated (path differs between dev and build)
+next-env.d.ts
