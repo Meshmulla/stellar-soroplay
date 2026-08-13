@@ -13,10 +13,10 @@ export default function QuickTips() {
     {
       title: 'Contract Structure',
       items: [
-        'Use #[soroban_contract] attribute on module',
-        'Use #[contractimpl] on impl blocks',
-        'Public functions are contract entry points',
-        'Env parameter required for storage/logging',
+        'Annotate your contract struct with #[contract]',
+        'Annotate the impl block with #[contractimpl]',
+        'Public fns in that impl are the contract entry points',
+        'Env is optional — add it only for storage, events, or logging',
       ],
     },
     {
