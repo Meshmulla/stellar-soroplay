@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { formatExecutionOutput, simulateExecution } from '@/lib/utils/executionUtils'
+import { formatExecutionOutput } from '@/lib/utils/executionUtils'
 
 export async function POST(request: NextRequest) {
   try {
