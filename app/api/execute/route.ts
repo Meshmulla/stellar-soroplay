@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
     // For MVP, return mock results based on function name
     // In production, this would use wasmtime or similar to execute WASM
-    let result: any = ''
+    let result: unknown = ''
 
     if (functionName === 'hello') {
       result = 'Hello, World!'

@@ -5,7 +5,7 @@
 /**
  * Formats execution output for display
  */
-export function formatExecutionOutput(result: any): string {
+export function formatExecutionOutput(result: unknown): string {
   if (result === null || result === undefined) {
     return 'null'
   }

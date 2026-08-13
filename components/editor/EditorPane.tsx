@@ -5,6 +5,8 @@ import { useEditorStore } from '@/lib/stores/editorStore'
 
 declare global {
   interface Window {
+    // Ace is loaded from a CDN and ships no types here, so it is untyped.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ace?: any
   }
 }
@@ -13,6 +15,7 @@ const ACE_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.31.1/ace.min.js'
 
 export default function EditorPane() {
   const editorRef = useRef<HTMLDivElement>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped Ace instance
   const aceEditorRef = useRef<any>(null)
   const code = useEditorStore((state) => state.code)
   const setCode = useEditorStore((state) => state.setCode)
