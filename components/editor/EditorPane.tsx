@@ -9,6 +9,8 @@ declare global {
   }
 }
 
+const ACE_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.31.1/ace.min.js'
+
 export default function EditorPane() {
   const editorRef = useRef<HTMLDivElement>(null)
   const aceEditorRef = useRef<any>(null)
@@ -16,22 +18,19 @@ export default function EditorPane() {
   const setCode = useEditorStore((state) => state.setCode)
 
   useEffect(() => {
-    // Load Ace editor from CDN
-    const script = document.createElement('script')
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.31.1/ace.min.js'
-    script.async = true
-    script.onload = () => {
-      if (!editorRef.current) return
+    let cancelled = false
+
+    const initEditor = () => {
+      if (cancelled || !editorRef.current || aceEditorRef.current) return
 
       const editor = window.ace.edit(editorRef.current)
       aceEditorRef.current = editor
 
       editor.setTheme('ace/theme/dracula')
       editor.session.setMode('ace/mode/rust')
-      editor.setValue(code)
-      editor.clearSelection()
+      // Read the latest code from the store to avoid a stale closure value.
+      editor.setValue(useEditorStore.getState().code, -1)
 
-      // Set options
       editor.setOptions({
         fontSize: 14,
         fontFamily: 'Monaco, Menlo, Consolas, "Courier New", monospace',
@@ -47,12 +46,36 @@ export default function EditorPane() {
       })
     }
 
-    document.head.appendChild(script)
+    // Reuse the CDN script across mounts instead of re-injecting it.
+    if (window.ace) {
+      initEditor()
+    } else {
+      let script = document.querySelector<HTMLScriptElement>(`script[src="${ACE_CDN}"]`)
+      if (!script) {
+        script = document.createElement('script')
+        script.src = ACE_CDN
+        script.async = true
+        document.head.appendChild(script)
+      }
+      script.addEventListener('load', initEditor)
+    }
 
     return () => {
-      document.head.removeChild(script)
+      cancelled = true
+      aceEditorRef.current?.destroy()
+      aceEditorRef.current = null
     }
-  }, [])
+  }, [setCode])
+
+  // Push external code changes (e.g. loading an example) into the editor.
+  // Guarded so we only setValue when it actually differs, avoiding a loop
+  // with the editor's own change handler.
+  useEffect(() => {
+    const editor = aceEditorRef.current
+    if (editor && editor.getValue() !== code) {
+      editor.setValue(code, -1)
+    }
+  }, [code])
 
   return (
     <div className="flex flex-1 flex-col border-r border-border">

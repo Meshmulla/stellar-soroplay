@@ -13,14 +13,17 @@ interface ExamplesSidebarProps {
 export default function ExamplesSidebar({ isOpen, onClose }: ExamplesSidebarProps) {
   const [selectedExample, setSelectedExample] = useState<string | null>(null)
   const setCode = useEditorStore((state) => state.setCode)
-  const initialize = useEditorStore((state) => state.initialize)
+  const resetResults = useEditorStore((state) => state.resetResults)
 
   const handleLoadExample = (exampleId: string) => {
     const example = CONTRACT_EXAMPLES.find((ex) => ex.id === exampleId)
     if (example) {
+      // Clear stale results first, THEN set the code — resetResults leaves
+      // the code untouched, so the loaded example survives.
+      resetResults()
       setCode(example.code)
       setSelectedExample(exampleId)
-      initialize()
+      onClose()
     }
   }
 
