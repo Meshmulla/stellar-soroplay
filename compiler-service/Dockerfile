@@ -11,8 +11,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# WASM target for Soroban contracts.
-RUN rustup target add wasm32-unknown-unknown
+# WASM target for Soroban contracts. Modern Soroban (Rust 1.84+) requires
+# wasm32v1-none; the old wasm32-unknown-unknown enables reference-types /
+# multi-value features the Soroban environment rejects.
+RUN rustup target add wasm32v1-none
 
 WORKDIR /app
 
@@ -24,7 +26,7 @@ RUN npm install --omit=dev
 # and its dependencies are compiled into the image. Runtime builds then only
 # recompile the user's lib.rs and can run fully offline.
 COPY template ./template
-RUN cd template && cargo build --target wasm32-unknown-unknown --release
+RUN cd template && cargo build --target wasm32v1-none --release
 
 COPY server.mjs ./
 
