@@ -30,6 +30,7 @@ interface EditorState {
   setWasmBinary: (binary: ArrayBuffer | null, size?: number, functions?: DetectedFunction[]) => void
   setExecuteOutput: (output: string) => void
   clearOutput: () => void
+  resetResults: () => void
   initialize: () => void
 }
 
@@ -48,6 +49,15 @@ export const useEditorStore = create<EditorState>((set) => ({
     set({ wasmBinary, wasmSize: size || 0, detectedFunctions: functions }),
   setExecuteOutput: (executeOutput) => set({ executeOutput }),
   clearOutput: () => set({ executeOutput: '' }),
+  // Clear compilation/execution results without touching the current code.
+  resetResults: () =>
+    set({
+      executeOutput: '',
+      compilationError: null,
+      detectedFunctions: [],
+      wasmBinary: null,
+      wasmSize: 0,
+    }),
   initialize: () =>
     set({
       code: DEFAULT_CONTRACT,
