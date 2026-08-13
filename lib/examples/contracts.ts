@@ -137,11 +137,3 @@ impl FibonacciContract {
 }`,
   },
 ]
-
-export function getExampleById(id: string): ContractExample | undefined {
-  return CONTRACT_EXAMPLES.find((ex) => ex.id === id)
-}
-
-export function getExamplesByDifficulty(difficulty: string): ContractExample[] {
-  return CONTRACT_EXAMPLES.filter((ex) => ex.difficulty === difficulty)
-}
