@@ -14,29 +14,19 @@ export const CONTRACT_EXAMPLES: ContractExample[] = [
   {
     id: 'hello-world',
     title: 'Hello World',
-    description: 'The simplest contract - returns a greeting message',
+    description: 'The simplest contract - returns a greeting built from Symbols',
     difficulty: 'beginner',
-    code: `#[soroban_contract]
-pub mod hello_contract {
-    use soroban_sdk::{contract, contractimpl, log, Env, String};
+    code: `#![no_std]
+use soroban_sdk::{contract, contractimpl, symbol_short, vec, Env, Symbol, Vec};
 
-    #[contract]
-    pub struct HelloContract;
+#[contract]
+pub struct HelloContract;
 
-    #[contractimpl]
-    impl HelloContract {
-        /// Returns "Hello, World!"
-        pub fn hello(env: Env) -> String {
-            log!(&env, "Hello, World!");
-            String::from_slice(&env, "Hello, World!")
-        }
-
-        /// Returns greeting for a name
-        pub fn greet(env: Env, name: String) -> String {
-            log!(&env, "Greeting {}", &name);
-            let greeting = String::from_slice(&env, "Hello, ");
-            greeting.concat(&name)
-        }
+#[contractimpl]
+impl HelloContract {
+    /// Returns ["Hello", <to>] as a vector of symbols.
+    pub fn hello(env: Env, to: Symbol) -> Vec<Symbol> {
+        vec![&env, symbol_short!("Hello"), to]
     }
 }`,
   },
@@ -45,29 +35,29 @@ pub mod hello_contract {
     title: 'Counter Contract',
     description: 'A contract that maintains a counter state and allows incrementing',
     difficulty: 'beginner',
-    code: `#[soroban_contract]
-pub mod counter_contract {
-    use soroban_sdk::{contract, contractimpl, Env, Symbol};
+    code: `#![no_std]
+use soroban_sdk::{contract, contractimpl, symbol_short, Env, Symbol};
 
-    #[contract]
-    pub struct Counter;
+const COUNTER: Symbol = symbol_short!("COUNTER");
 
-    #[contractimpl]
-    impl Counter {
-        /// Increment the counter
-        pub fn increment(env: Env) -> u32 {
-            let key = Symbol::short("count");
-            let count: u32 = env.storage().instance().get(&key).unwrap_or(0);
-            let new_count = count + 1;
-            env.storage().instance().set(&key, &new_count);
-            new_count
-        }
+#[contract]
+pub struct IncrementContract;
 
-        /// Get the current count
-        pub fn get_count(env: Env) -> u32 {
-            let key = Symbol::short("count");
-            env.storage().instance().get(&key).unwrap_or(0)
-        }
+#[contractimpl]
+impl IncrementContract {
+    /// Increment the persistent counter and return the new value.
+    pub fn increment(env: Env) -> u32 {
+        let mut count: u32 = env.storage().instance().get(&COUNTER).unwrap_or(0);
+        count += 1;
+        env.storage().instance().set(&COUNTER, &count);
+        // Keep the contract's instance storage alive.
+        env.storage().instance().extend_ttl(50, 100);
+        count
+    }
+
+    /// Return the current counter value.
+    pub fn get_count(env: Env) -> u32 {
+        env.storage().instance().get(&COUNTER).unwrap_or(0)
     }
 }`,
   },
@@ -76,90 +66,73 @@ pub mod counter_contract {
     title: 'Token Transfer',
     description: 'Basic token transfer contract demonstrating ledger operations',
     difficulty: 'intermediate',
-    code: `#[soroban_contract]
-pub mod token_contract {
-    use soroban_sdk::{contract, contractimpl, Address, Env, Symbol};
+    code: `#![no_std]
+use soroban_sdk::{contract, contractimpl, Address, Env};
 
-    #[contract]
-    pub struct TokenContract;
+#[contract]
+pub struct TokenContract;
 
-    #[contractimpl]
-    impl TokenContract {
-        /// Transfer tokens between accounts
-        pub fn transfer(
-            env: Env,
-            from: Address,
-            to: Address,
-            amount: u128,
-        ) -> bool {
-            from.require_auth();
-            
-            let key_from = Symbol::short("balance");
-            let key_to = Symbol::short("balance");
-            
-            let from_balance: u128 = env.storage().instance().get(&key_from).unwrap_or(0);
-            if from_balance < amount {
-                return false;
-            }
-            
-            let to_balance: u128 = env.storage().instance().get(&key_to).unwrap_or(0);
-            
-            env.storage().instance().set(&key_from, &(from_balance - amount));
-            env.storage().instance().set(&key_to, &(to_balance + amount));
-            
-            true
+#[contractimpl]
+impl TokenContract {
+    /// Transfer \`amount\` from \`from\` to \`to\`. Requires \`from\`'s auth.
+    /// Balances are keyed per-Address in persistent storage.
+    pub fn transfer(env: Env, from: Address, to: Address, amount: i128) -> bool {
+        from.require_auth();
+
+        let from_balance = Self::balance(env.clone(), from.clone());
+        if from_balance < amount {
+            return false;
         }
+        let to_balance = Self::balance(env.clone(), to.clone());
 
-        /// Get balance of an account
-        pub fn balance(env: Env) -> u128 {
-            let key = Symbol::short("balance");
-            env.storage().instance().get(&key).unwrap_or(0)
-        }
+        env.storage().persistent().set(&from, &(from_balance - amount));
+        env.storage().persistent().set(&to, &(to_balance + amount));
+        true
+    }
+
+    /// Read the stored balance for \`who\` (0 if never set).
+    pub fn balance(env: Env, who: Address) -> i128 {
+        env.storage().persistent().get(&who).unwrap_or(0)
     }
 }`,
   },
   {
     id: 'fibonacci',
     title: 'Fibonacci Generator',
-    description: 'Calculate Fibonacci numbers with memoization',
+    description: 'Iterative on-chain Fibonacci computation',
     difficulty: 'intermediate',
-    code: `#[soroban_contract]
-pub mod fibonacci {
-    use soroban_sdk::{contract, contractimpl, Env, Symbol};
+    code: `#![no_std]
+use soroban_sdk::{contract, contractimpl};
 
-    #[contract]
-    pub struct Fibonacci;
+#[contract]
+pub struct FibonacciContract;
 
-    #[contractimpl]
-    impl Fibonacci {
-        /// Calculate fibonacci number at position n
-        pub fn fib(env: Env, n: u32) -> u64 {
-            let key = Symbol::short("fib");
-            
-            if n <= 1 {
-                return n as u64;
-            }
-            
-            let mut a = 0u64;
-            let mut b = 1u64;
-            
-            for _ in 2..=n {
-                let next = a + b;
-                a = b;
-                b = next;
-            }
-            
-            b
+#[contractimpl]
+impl FibonacciContract {
+    /// Return the n-th Fibonacci number, computed iteratively.
+    /// The Env argument is optional and omitted here since no host
+    /// features (storage, events, logging) are used.
+    pub fn fib(n: u32) -> u64 {
+        if n <= 1 {
+            return n as u64;
         }
-
-        /// Get fibonacci sequence up to n
-        pub fn sequence(env: Env, count: u32) -> u64 {
-            let mut sum = 0u64;
-            for i in 0..count {
-                sum += Self::fib(env, i);
-            }
-            sum
+        let mut a: u64 = 0;
+        let mut b: u64 = 1;
+        for _ in 2..=n {
+            let next = a + b;
+            a = b;
+            b = next;
         }
+        b
+    }
+
+    /// Sum the first \`count\` Fibonacci numbers.
+    pub fn sum_to(count: u32) -> u64 {
+        let mut sum: u64 = 0;
+        for i in 0..count {
+            sum += Self::fib(i);
+        }
+        sum
     }
 }`,
   },

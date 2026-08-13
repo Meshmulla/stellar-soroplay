@@ -83,14 +83,15 @@ export function validateSorobanContract(rustCode: string): {
   const errors: string[] = []
   const warnings: string[] = []
 
-  // Check for soroban_contract attribute
-  if (!rustCode.includes('#[soroban_contract]')) {
-    errors.push('Missing #[soroban_contract] attribute')
+  // Check for the #[contract] attribute on the contract struct.
+  // (#[soroban_contract] is not a real Soroban SDK macro.)
+  if (!/#\[\s*contract\s*\]/.test(rustCode)) {
+    errors.push('Missing #[contract] attribute on your contract struct')
   }
 
-  // Check for contractimpl
-  if (!rustCode.includes('#[contractimpl]')) {
-    warnings.push('No #[contractimpl] attribute found')
+  // Check for #[contractimpl] on the impl block.
+  if (!/#\[\s*contractimpl\s*\]/.test(rustCode)) {
+    warnings.push('No #[contractimpl] attribute found — contract functions are exported from an impl block annotated with #[contractimpl]')
   }
 
   // Check for at least one public function
