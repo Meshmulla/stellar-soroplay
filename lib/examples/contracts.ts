@@ -99,45 +99,40 @@ impl TokenContract {
   {
     id: 'fibonacci',
     title: 'Fibonacci Generator',
-    description: 'Calculate Fibonacci numbers with memoization',
+    description: 'Iterative on-chain Fibonacci computation',
     difficulty: 'intermediate',
-    code: `#[soroban_contract]
-pub mod fibonacci {
-    use soroban_sdk::{contract, contractimpl, Env, Symbol};
+    code: `#![no_std]
+use soroban_sdk::{contract, contractimpl};
 
-    #[contract]
-    pub struct Fibonacci;
+#[contract]
+pub struct FibonacciContract;
 
-    #[contractimpl]
-    impl Fibonacci {
-        /// Calculate fibonacci number at position n
-        pub fn fib(env: Env, n: u32) -> u64 {
-            let key = Symbol::short("fib");
-            
-            if n <= 1 {
-                return n as u64;
-            }
-            
-            let mut a = 0u64;
-            let mut b = 1u64;
-            
-            for _ in 2..=n {
-                let next = a + b;
-                a = b;
-                b = next;
-            }
-            
-            b
+#[contractimpl]
+impl FibonacciContract {
+    /// Return the n-th Fibonacci number, computed iteratively.
+    /// The Env argument is optional and omitted here since no host
+    /// features (storage, events, logging) are used.
+    pub fn fib(n: u32) -> u64 {
+        if n <= 1 {
+            return n as u64;
         }
-
-        /// Get fibonacci sequence up to n
-        pub fn sequence(env: Env, count: u32) -> u64 {
-            let mut sum = 0u64;
-            for i in 0..count {
-                sum += Self::fib(env, i);
-            }
-            sum
+        let mut a: u64 = 0;
+        let mut b: u64 = 1;
+        for _ in 2..=n {
+            let next = a + b;
+            a = b;
+            b = next;
         }
+        b
+    }
+
+    /// Sum the first \`count\` Fibonacci numbers.
+    pub fn sum_to(count: u32) -> u64 {
+        let mut sum: u64 = 0;
+        for i in 0..count {
+            sum += Self::fib(i);
+        }
+        sum
     }
 }`,
   },
