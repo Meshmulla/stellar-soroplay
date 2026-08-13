@@ -1,0 +1,14 @@
+{
+  "name": "soroplay-compiler-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Rust -> WASM build service for SoroPlay: compiles Soroban contracts to WebAssembly",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
